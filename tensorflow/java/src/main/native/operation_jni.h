@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_JAVA_OPERATION_JNI_H_
-#define TENSORFLOW_JAVA_OPERATION_JNI_H_
+#ifndef TENSORFLOW_JAVA_SRC_MAIN_NATIVE_OPERATION_JNI_H_
+#define TENSORFLOW_JAVA_SRC_MAIN_NATIVE_OPERATION_JNI_H_
 
 #include <jni.h>
 
@@ -73,7 +73,18 @@ JNIEXPORT jlongArray JNICALL Java_org_tensorflow_Operation_shape(JNIEnv *,
 JNIEXPORT jint JNICALL Java_org_tensorflow_Operation_dtype(JNIEnv *, jclass,
                                                            jlong, jlong, jint);
 
+
+/*
+ * Class:     org_tensorflow_Operation
+ * Method:    inputListLength
+ * Signature: (JLjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_org_tensorflow_Operation_inputListLength(JNIEnv *,
+                                                                      jclass,
+                                                                      jlong,
+                                                                      jstring);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
-#endif  // TENSORFLOW_JAVA_OPERATION_JNI_H_
+#endif  // TENSORFLOW_JAVA_SRC_MAIN_NATIVE_OPERATION_JNI_H_

@@ -14,21 +14,22 @@ limitations under the License.
 ==============================================================================*/
 
 #include "tensorflow/compiler/tf2xla/type_util.h"
+#include "tensorflow/compiler/tf2xla/xla_compilation_device.h"
 #include "tensorflow/compiler/tf2xla/xla_compiler.h"
 #include "tensorflow/compiler/tf2xla/xla_helpers.h"
 #include "tensorflow/compiler/tf2xla/xla_op_kernel.h"
 #include "tensorflow/compiler/tf2xla/xla_op_registry.h"
 #include "tensorflow/core/framework/kernel_def_builder.h"
+#include "tensorflow/core/lib/core/errors.h"
 
 namespace tensorflow {
-namespace {
 
 // This OpKernel implements the _Arg Op for XLA JIT devices. It
 // associates its output with one of the arguments to a
 // subcomputation.
-class ArgOp : public XlaOpKernel {
+class XlaArgOp : public XlaOpKernel {
  public:
-  explicit ArgOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
+  explicit XlaArgOp(OpKernelConstruction* ctx) : XlaOpKernel(ctx) {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("T", &dtype_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("index", &index_));
   }
@@ -49,29 +50,19 @@ class ArgOp : public XlaOpKernel {
       return;
     }
 
-    XlaContext& tc = XlaContext::Get(ctx);
-    const XlaContext::Argument& arg = tc.args()[index_];
-    if (arg.is_variable) {
-      // We use the argument position of the variable input as a unique ID.
-      // TODO(phawkins): this code assumes that variables do not alias.
-      OP_REQUIRES_OK(ctx, tc.CreateVariable(index_, arg.name, arg.value.type,
-                                            arg.value.handle));
-      ctx->SetVariableOutput(0, index_);
-    } else if (arg.value.is_constant) {
-      ctx->SetConstantOutput(0, arg.value.constant_value);
-    } else {
-      ctx->SetOutput(0, arg.value.handle);
-    }
+    const XlaExpression& arg = ctx->xla_context()->args()[index_];
+    OP_REQUIRES(ctx, arg.kind() != XlaExpression::Kind::kInvalid,
+                errors::InvalidArgument("Invalid/missing argument expression"));
+    ctx->SetOutputExpression(0, arg);
   }
 
  private:
   int index_;
   DataType dtype_;
 
-  TF_DISALLOW_COPY_AND_ASSIGN(ArgOp);
+  TF_DISALLOW_COPY_AND_ASSIGN(XlaArgOp);
 };
 
-REGISTER_XLA_OP(Name("_Arg").AllowResourceTypes(), ArgOp);
+REGISTER_XLA_OP(Name("_Arg").AllowResourceTypes().CompilationOnly(), XlaArgOp);
 
-}  // namespace
 }  // namespace tensorflow

@@ -1,9 +1,8 @@
 # Description:
-# Tensor bundle: a module to efficiently serialize and deserialize tensors.
+#   Tensor bundle: a module to efficiently serialize and deserialize tensors.
 
 package(
     default_visibility = ["//visibility:public"],
-    features = ["-parse_headers"],
 )
 
 licenses(["notice"])  # Apache 2.0
@@ -11,7 +10,9 @@ licenses(["notice"])  # Apache 2.0
 load(
     "//tensorflow:tensorflow.bzl",
     "cc_header_only_library",
+    "if_not_windows",
     "tf_copts",
+    "tf_cc_test",
 )
 
 # To be exported to tensorflow/core:mobile_srcs.
@@ -34,12 +35,11 @@ cc_library(
     name = "tensor_bundle",
     srcs = ["tensor_bundle.cc"],
     hdrs = ["tensor_bundle.h"],
-    copts = tf_copts() + ["-Wno-sign-compare"],
+    copts = tf_copts() + if_not_windows(["-Wno-sign-compare"]),
     deps = [
         ":naming",
-        "//tensorflow/core:core_cpu_internal",
+        "//tensorflow/core:core_cpu_lib",
         "//tensorflow/core:framework",
-        "//tensorflow/core:framework_headers_lib",
         "//tensorflow/core:framework_internal",
         "//tensorflow/core:lib",
         "//tensorflow/core:lib_internal",
@@ -50,9 +50,8 @@ cc_library(
 
 cc_header_only_library(
     name = "tensor_bundle_headers_lib",
-    deps = [
-        ":tensor_bundle",
-    ],
+    features = ["-parse_headers"],  # Transitively pulls in Eigen headers
+    deps = [":tensor_bundle"],
 )
 
 cc_library(
@@ -62,11 +61,17 @@ cc_library(
     deps = ["//tensorflow/core:lib"],
 )
 
-cc_test(
+tf_cc_test(
     name = "tensor_bundle_test",
     srcs = ["tensor_bundle_test.cc"],
+    data = glob(["testdata/**"]),
+    tags = [
+        "nomsan",
+        "notsan",
+    ],
     deps = [
         ":tensor_bundle",
+        "//tensorflow/core:framework",
         "//tensorflow/core:lib",
         "//tensorflow/core:lib_internal",
         "//tensorflow/core:protos_all_cc",
@@ -74,19 +79,4 @@ cc_test(
         "//tensorflow/core:test",
         "//tensorflow/core:test_main",
     ],
-)
-
-# -----------------------------------------------------------------------------
-# Google-internal targets.  These must be at the end for syncrepo.
-
-filegroup(
-    name = "all_files",
-    srcs = glob(
-        ["**/*"],
-        exclude = [
-            "**/METADATA",
-            "**/OWNERS",
-        ],
-    ),
-    visibility = ["//tensorflow:__subpackages__"],
 )

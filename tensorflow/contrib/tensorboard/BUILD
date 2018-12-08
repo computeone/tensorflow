@@ -14,7 +14,6 @@ load("//tensorflow:tensorflow.bzl", "py_test")
 tf_proto_library(
     name = "protos_all",
     srcs = glob(["**/*.proto"]),
-    go_api_version = 2,
     visibility = ["//visibility:public"],
 )
 
@@ -33,7 +32,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":projector",
-        ":trace",
     ],
 )
 
@@ -43,8 +41,8 @@ py_library(
     srcs = ["plugins/projector/__init__.py"],
     srcs_version = "PY2AND3",
     deps = [
+        ":protos_all_py",
         "//tensorflow/python:lib",
-        "//tensorflow/tensorboard/plugins/projector:protos_all_py",
     ],
 )
 
@@ -55,50 +53,9 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":projector",
+        ":protos_all_py",
         "//tensorflow/python:client_testlib",
         "//tensorflow/python:platform",
         "//tensorflow/python:summary",
-        "//tensorflow/tensorboard/plugins/projector:protos_all_py",
     ],
-)
-
-# API methods and protos in `tf.contrib.tensorboard.plugins.trace` package.
-py_library(
-    name = "trace",
-    srcs = glob(
-        ["plugins/trace/**/*.py"],
-        exclude = ["**/*test*"],
-    ),
-    srcs_version = "PY2AND3",
-    deps = [
-        ":protos_all_py",
-        "//tensorflow/python:framework_for_generated_wrappers",
-        "//tensorflow/python:lib",
-        "//tensorflow/python:platform",
-    ],
-)
-
-py_test(
-    name = "trace_test",
-    size = "small",
-    srcs = ["plugins/trace/trace_test.py"],
-    srcs_version = "PY2AND3",
-    deps = [
-        ":trace",
-        "//tensorflow/python:client_testlib",
-        "//tensorflow/python:framework_for_generated_wrappers",
-        "//tensorflow/python:platform",
-    ],
-)
-
-filegroup(
-    name = "all_files",
-    srcs = glob(
-        ["**/*"],
-        exclude = [
-            "**/METADATA",
-            "**/OWNERS",
-        ],
-    ),
-    visibility = ["//tensorflow:__subpackages__"],
 )

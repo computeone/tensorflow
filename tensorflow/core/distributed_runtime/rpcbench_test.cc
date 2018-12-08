@@ -32,6 +32,7 @@ limitations under the License.
 #include "tensorflow/core/platform/test.h"
 #include "tensorflow/core/platform/test_benchmark.h"
 #include "tensorflow/core/platform/types.h"
+#include "tensorflow/core/protobuf/cluster.pb.h"
 #include "tensorflow/core/protobuf/tensorflow_server.pb.h"
 #include "tensorflow/core/public/session.h"
 
@@ -183,8 +184,8 @@ static void BM_Helper(int iters, int width, int num_stages, int tensor_size,
 
   testing::SetLabel(
       strings::StrCat(def.node_size(), " nodes; ",
-             use_multiple_devices ? "Multi device" : "Single device",
-             "; tensor bytes/send: ", tensor_size * sizeof(float)));
+                      use_multiple_devices ? "Multi device" : "Single device",
+                      "; tensor bytes/send: ", tensor_size * sizeof(float)));
 
   std::vector<Tensor> outputs;
 
